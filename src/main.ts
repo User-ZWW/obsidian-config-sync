@@ -41,7 +41,6 @@ export default class ConfigSyncPlugin extends Plugin implements ConfigSyncPlugin
 	settings: PluginSettings = structuredClone(DEFAULT_SETTINGS);
 	settingsStore!: SettingsStore;
 	logger!: RingLogger;
-	engine!: SyncEngine;
 
 	private client: DropboxClient | null = null;
 	private snapshotManager: SnapshotManager | null = null;
@@ -52,6 +51,11 @@ export default class ConfigSyncPlugin extends Plugin implements ConfigSyncPlugin
 
 	private index: SyncIndex = emptyIndex();
 	private syncing = false;
+	/**
+	 * 同步引擎懒建。★ 不能在 onload 里就建：构造它需要 Dropbox 凭据，
+	 * 而新装插件的人还没配凭据 —— 那样会让 onload 抛错，插件整个加载不起来。
+	 */
+	private _engine: SyncEngine | null = null;
 
 	async onload(): Promise<void> {
 		this.logger = new RingLogger({ level: "info", max: 500, console: false });
@@ -78,7 +82,6 @@ export default class ConfigSyncPlugin extends Plugin implements ConfigSyncPlugin
 		this.addSettingTab(new ConfigSyncSettingTab(this.app, this, this));
 
 		this.registerCommands();
-		this.rebuildEngine();
 		this.refreshTriggers();
 
 		if (!this.settings.dropbox.appKey) {
@@ -273,7 +276,7 @@ export default class ConfigSyncPlugin extends Plugin implements ConfigSyncPlugin
 			await this.saveSettings();
 			this.client = null;
 			this.restoreManager = null;
-			this.rebuildEngine();
+			this.invalidateEngine();
 
 			const info = await this.testConnection();
 			new Notice(`已连接 Dropbox：${info.name} <${info.email}>`, 6000);
@@ -304,6 +307,12 @@ export default class ConfigSyncPlugin extends Plugin implements ConfigSyncPlugin
 	/** 设置面板「清空日志」按钮用（plugin-api 里是可选成员） */
 	clearLog(): void {
 		this.logger.clear();
+	}
+
+	/** 懒建：第一次真正要用到 Dropbox 时才构造，没配凭据时报可读的错。 */
+	get engine(): SyncEngine {
+		if (!this._engine) this._engine = this.buildEngine(this.getClient());
+		return this._engine;
 	}
 
 	/* ============================ 内部装配 ============================ */
@@ -356,8 +365,7 @@ export default class ConfigSyncPlugin extends Plugin implements ConfigSyncPlugin
 		};
 	}
 
-	private rebuildEngine(): void {
-		const client = this.getClient();
+	private buildEngine(client: DropboxClient): SyncEngine {
 		this.snapshotManager = new SnapshotManager({
 			client,
 			localRootDir: this.configDirAbs(),
@@ -365,7 +373,7 @@ export default class ConfigSyncPlugin extends Plugin implements ConfigSyncPlugin
 			keep: this.settings.snapshotKeep,
 			logger: this.logger,
 		});
-		this.engine = new SyncEngine({
+		return new SyncEngine({
 			client,
 			indexStore: {
 				get: () => this.index,
@@ -380,6 +388,13 @@ export default class ConfigSyncPlugin extends Plugin implements ConfigSyncPlugin
 			snapshotManager: this.settings.snapshotEnabled ? this.snapshotManager : undefined,
 			onProgress: (phase, done, total) => this.status?.setBusy(phase, done, total),
 		});
+	}
+
+	/** 凭据或设置变了：丢掉旧引擎与快照器，下次用时会按新设置重建 */
+	private invalidateEngine(): void {
+		this._engine = null;
+		this.snapshotManager = null;
+		this.restoreManager = null;
 	}
 
 	private registerCommands(): void {

@@ -7,7 +7,10 @@
   "scripts": {
     "build": "tsc --noEmit && node esbuild.config.mjs production",
     "typecheck": "tsc --noEmit",
-    "test": "node --test --test-reporter=spec \"test/**/*.test.mjs\"",
+    "test": "npm run build && node --test --test-reporter=spec \"test/**/*.test.mjs\"",
+    "test:only": "node --test --test-reporter=spec \"test/**/*.test.mjs\"",
+    "test:load": "npm run build && node --test --test-reporter=spec test/plugin-load.test.mjs",
+    "smoke": "node scripts/smoke-dropbox.mjs",
     "deploy": "node scripts/deploy.mjs"
   },
   "devDependencies": {

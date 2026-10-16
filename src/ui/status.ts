@@ -71,12 +71,14 @@ export class StatusIndicator {
 
 	/** 点状态栏 / ribbon：跑一轮手动同步并把结果回写到状态栏与通知。 */
 	private async triggerSync(): Promise<void> {
-		if (this.busy || this.api.engine.running) {
-			new Notice("配置备份：已经有一轮同步在进行，请稍候");
-			return;
-		}
-		this.setBusy("同步中", 0, 0);
+		// 整个函数体都要在 try 里：api.engine 是懒建的，没配 Dropbox 时取它会抛错，
+		// 而这个方法是 fire-and-forget 调用的，抛出去就成了没人接的 rejection。
 		try {
+			if (this.busy || this.api.engine.running) {
+				new Notice("配置备份：已经有一轮同步在进行，请稍候");
+				return;
+			}
+			this.setBusy("同步中", 0, 0);
 			const result = await this.api.runSync("manual");
 			if (result.errors.length > 0) {
 				this.setError(`有 ${result.errors.length} 个文件失败，详见设置面板的日志`);
