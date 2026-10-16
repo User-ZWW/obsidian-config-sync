@@ -1,0 +1,71 @@
+/* 配置文件夹云备份插件 —— 样式表。用 Obsidian 主题变量，不写死颜色。 */
+
+.config-sync-status {
+	cursor: pointer;
+}
+
+.config-sync-status.is-busy {
+	color: var(--text-accent);
+}
+
+.config-sync-status.is-error {
+	color: var(--text-error);
+}
+
+.config-sync-status.is-ok {
+	color: var(--text-success, var(--text-normal));
+}
+
+.config-sync-log {
+	font-family: var(--font-monospace);
+	font-size: var(--font-smallest);
+	white-space: pre-wrap;
+	word-break: break-all;
+	max-height: 22em;
+	overflow: auto;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	padding: var(--size-4-2);
+	margin-top: var(--size-4-2);
+}
+
+.config-sync-warn {
+	color: var(--text-warning, var(--text-normal));
+}
+
+.config-sync-quota-bar {
+	height: 6px;
+	background: var(--background-modifier-border);
+	border-radius: 3px;
+	overflow: hidden;
+	margin: var(--size-4-1) 0;
+}
+
+.config-sync-quota-bar > span {
+	display: block;
+	height: 100%;
+	background: var(--interactive-accent);
+}
+
+.config-sync-diff-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-family: var(--font-monospace);
+	font-size: var(--font-smallest);
+}
+
+.config-sync-diff-table td,
+.config-sync-diff-table th {
+	border-bottom: 1px solid var(--background-modifier-border);
+	padding: 2px 6px;
+	text-align: left;
+}
+
+.config-sync-diff-add {
+	color: var(--text-success, var(--text-normal));
+}
+
+.config-sync-diff-del {
+	color: var(--text-error);
+}
