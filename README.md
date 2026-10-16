@@ -321,7 +321,9 @@ cd "D:/projects/obsidian-config-sync"
 npm install
 npm run build        # tsc --noEmit && esbuild → main.js
 npm run typecheck    # 只做类型检查
-npm test             # node --test 跑 test/**/*.test.mjs
+npm test             # 先构建，再跑 test/**/*.test.mjs（154 个测试）
+npm run test:only    # 同上但不重新构建
+npm run test:load    # 只跑「打包产物能否被加载」这一组
 npm run deploy       # 拷进 Obsidian 插件目录
 ```
 
@@ -332,11 +334,28 @@ npm run deploy       # 拷进 Obsidian 插件目录
 
 运行时依赖只有 `yazl` / `yauzl` 两个 zip 库（打包进 `main.js`），其余全用 node 内置模块。
 
-单独跑还原模块的测试：
+三档测试，各自把关不同的东西：
+
+| 命令 | 测什么 | 靠什么手段 |
+|---|---|---|
+| `node --test test/dropbox.test.mjs` 等单模块测试 | 各模块的纯逻辑与边界 | 真实临时文件 + 本地保真 mock 服务 |
+| `node --test test/e2e.integration.test.mjs` | **默认注入实现**串起来能不能跑通 | 真实 `DropboxClient` + 真实 `scanDir` + 真实 `yazl/yauzl` + 真实 socket（服务端仍是 mock） |
+| `npm run test:load` | 打包产物**在 Obsidian 里加载得起来吗** | 按 CJS 真编译 `main.js`，用 `test/helpers/obsidian-stub.cjs` 顶替 `obsidian`，真跑 `onload` / 设置面板 `display()` / 状态栏点击 / `onunload`，并验证改一个配置文件会走完防抖触发同步 |
+
+> `test:load` 这一档不是形式主义：它抓到过一个单靠 `npm run build` 和单元测试都发现不了的致命 bug —— 早期 `onload()` 里就把同步引擎建好了，而建引擎需要 Dropbox 凭据，结果是**新用户装完插件根本加载不起来**。修法是把引擎改成懒建（`get engine()`）。
+
+`test/e2e.integration.test.mjs` 里的 mock 服务（`test/helpers/mock-dropbox-server.mjs`）刻意比真服务更苛刻：每页只回 3 条强制翻页、校验 `upload_session` 的 `cursor.offset`、`create_folder_v2` 不自动补父目录、`delete_v2` 删不存在路径回 409。它对 `Dropbox-API-Result` 响应头做 `\uXXXX` 转义，跟真实 Dropbox 一致 —— 不做转义的话，中文文件名会让 Node 的 HTTP 层直接抛 `ERR_INVALID_CHAR`。
+
+### 针对真实 Dropbox 的冒烟测试
 
 ```bash
-node --test --test-reporter=spec test/restore.test.mjs
+DROPBOX_APP_KEY=xxx DROPBOX_REFRESH_TOKEN=yyy NODE_USE_ENV_PROXY=1 \
+  node scripts/smoke-dropbox.mjs
 ```
+
+只打 `/Obsidian-Config-Backup/_selftest-<时间戳>/` 这个沙盒目录，跑完删净，**不碰线上备份路径**。它验证真实服务端语义：token 刷新、中文名上传、9MB 走分块上传会话、递归列举、下载逐字节比对、幂等删除。
+
+`NODE_USE_ENV_PROXY=1` 是必需的：node 的 `node:http` 不读 `http_proxy` / `https_proxy`，所以脚本用的是内置 fetch 版的 HttpClient（`scripts/fetch-http-client.mjs`）。**插件本身没这个问题** —— 它用 Obsidian 的 `requestUrl`，走 Electron 网络栈，自带系统代理。
 
 ---
 
