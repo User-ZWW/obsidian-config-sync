@@ -47,4 +47,11 @@ export interface ConfigSyncPluginApi {
 	/** 设置面板里的实时日志 */
 	appendLog(line: string): void;
 	getLog(): string[];
+
+	/**
+	 * 【Phase 2 / Agent D 追加】清空内存里的日志。
+	 * 设置面板的「清空」按钮用；可选 —— 未实现时面板退化为只刷新视图，
+	 * 所以 main.ts 不实现它也不会编译不过。
+	 */
+	clearLog?(): void;
 }

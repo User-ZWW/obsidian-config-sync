@@ -30,7 +30,6 @@ declare module "yauzl" {
 		fileName: string;
 		uncompressedSize: number;
 		compressedSize: number;
-		isDirectory(): boolean;
 		getLastModDate(): Date;
 	}
 
