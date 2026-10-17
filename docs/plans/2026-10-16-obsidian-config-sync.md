@@ -10,13 +10,13 @@
 - `.obsidian` 总计 786,622,940 字节 ≈ 750 MiB。
 - 目标载荷 ≈ 344 MB = plugins 234M（378M 减去 `插件备份*` 144M）+ snippets 90M + themes 9M + 配置 json 0.2M。
 - 排除项：`.git/`(214M)、`icons/`(91M)、`plugins/插件备份*`(144M)。
-- Dropbox 账户 `Test User`：配额 18 GiB / 已用 6.39 GiB / 剩 11.61 GiB。
+- Dropbox 账户 `your-account`：配额 18 GiB / 已用 6.39 GiB / 剩 11.61 GiB。
 - 本机没装 Dropbox 桌面客户端。用户已确认：插件自己走 OAuth PKCE。
 - Dropbox 官方规则：PKCE + refresh token 是桌面端推荐流程；redirect_uri 必须与 App Console 登记值**完全一致**，除 localhost 外必须 HTTPS；code flow 下 redirect_uri **可省略**，此时 Dropbox 直接把 code 显示给用户粘贴 —— 这是零配置的兜底路径。
-- 环境：node v24.15.0、npm 11.12.1、Obsidian 1.14.4（`obsidian`）、7-Zip 已装、D: 可写。
+- 环境：node v24.15.0、npm 11.12.1、Obsidian 1.14.4、7-Zip。
 
-**代码位置**：`D:\projects\obsidian-config-sync\`（源码仓库）
-**部署位置**：`C:\Users\User-ZWW\Downloads\MyVault\.obsidian\plugins\obsidian-config-sync\`（只放 main.js / manifest.json / styles.css）
+**代码位置**：`/path/to/obsidian-config-sync`（源码仓库）
+**部署位置**：`<vault>/.obsidian/plugins/obsidian-config-sync/`（只放 main.js / manifest.json / styles.css）
 
 ---
 

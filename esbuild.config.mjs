@@ -4,7 +4,7 @@ import { builtinModules } from "node:module";
 
 const banner = `/*
 此文件由 esbuild 从 src/ 打包生成，请勿直接修改。
-源码：D:\\projects\\obsidian-config-sync
+源码：/path/to/obsidian-config-sync
 */`;
 
 const prod = process.argv[2] === "production";

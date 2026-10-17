@@ -38,7 +38,7 @@
 |---|---|
 | 云盘 | **只有 Dropbox**。插件通过 Dropbox HTTP API v2 写入，**不需要 Dropbox 桌面客户端**（这台机器本来也没装）。 |
 | 授权方式 | **OAuth 2.0 + PKCE（公开客户端）**。**必须你自己去 Dropbox 后台建一个 App**，把它的 **App key** 填进插件设置；插件不需要 App secret。 |
-| 账号配额 | Dropbox 账号 `Test User`：总额 **18 GiB**、已用 **6.39 GiB**、可用 **11.61 GiB**（2026-10-16 实测）。 |
+| 账号配额 | Dropbox 账号 `your-account`：总额 **18 GiB**、已用 **6.39 GiB**、可用 **11.61 GiB**（2026-10-16 实测）。 |
 | 单次载荷 | 目标配置载荷实测约 **344 MB**（plugins 234M + snippets 90M + themes 9M + 配置 json 0.2M）。 |
 | 与 git 备份的关系 | **与已有的 obsidian-git 共存，互不干涉**：插件不读也不改 obsidian-git 的设置或仓库；反过来 obsidian-git 也不知道这个插件的存在。`.git/` 被排除在同步范围外。 |
 | 还原功能 | **只提供防呆版**：先预览差异 → 确认弹窗 → 还原前自动留底 zip → 才开始写。默认**只写不删**。 |
@@ -134,7 +134,7 @@ VAULT_ROOT="D:/path/to/YourVault" npm run deploy
 4. **Choose the type of access you need** → 选 **Full Dropbox**
    - 为什么：插件默认要写 `/Obsidian-Config-Backup/`，这是账号根目录下的自定义目录。
    - 如果你选 **App folder**：Dropbox 只允许该 App 访问 `/Apps/<你的App名称>/`，你必须把插件设置里的 **远端根目录** 改成 `/Apps/<你的App名称>`，否则所有请求都会 409 报错。
-5. **Name your app** → 起个全局唯一的名字（例如 `user-zww-obsidian-config-sync`），勾选同意条款
+5. **Name your app** → 起个全局唯一的名字（例如 `my-obsidian-config-sync`），勾选同意条款
 6. 点 **Create app**
 7. 进 **Permissions** 标签页，**勾选这 4 个**（少一个就会在运行时报 `does not have the required scope`）：
 
@@ -178,7 +178,7 @@ VAULT_ROOT="D:/path/to/YourVault" npm run deploy
 3. 插件拿 `code + code_verifier` 去 `https://api.dropboxapi.com/oauth2/token` 换 token（授权 URL 带 `token_access_type=offline`），拿到：
    - `access_token`（约 4 小时过期，插件会自动刷新）
    - `refresh_token`（长期有效，后台定时同步靠它）
-4. 点「测试连接」应显示账号名与邮箱，例如 `已连接 Dropbox：Test User <…>`；设置面板同时会显示配额占用。
+4. 点「测试连接」应显示账号名与邮箱，例如 `已连接 Dropbox：your-account <…>`；设置面板同时会显示配额占用。
 
 凭据存在插件自己的 `data.json` 里（路径见第 10 节）。**注意第 12 节第 4 条**：该文件默认在同步范围内。
 
@@ -327,7 +327,7 @@ gitignore 的一个子集，**不支持 `!` 取反**（要什么就往「包含�
    Dropbox 给的 `content_hash` 不是 SHA-256，无法与本地 sha256 对比；要做到内容级比对就得在预览阶段下载 344 MB，不合理。**后果**：如果某个文件在本地被改动但**大小恰好没变**（例如把某行的 `true` 改成 `false`…），还原会判定它「无变化」而不覆盖它。真要强制回滚这种文件，先手动删掉它再还原。
    同步方向不受影响：同步那边可以开「精确比对（hash）」。
 2. **没有端到端加密**。远端就是明文配置。插件自己的 `data.json`（含 `refresh_token`）在 1 节里说了**默认仍在同步范围内**，也就是会被上传到 Dropbox —— 这是为了「换机器连授权一起恢复」的取舍。**不接受的话，把 `plugins/obsidian-config-sync/data.json` 加进排除规则**（代价：新机器要重新授权）。
-3. **留底 zip 默认放在 vault 根目录**（`<vault>/.obsidian-safety-snapshots/`），会出现在 Obsidian 的文件列表里，而且**不会自动清理**（每次还原新增一份，每份约 344 MB 的配置内容大小）。两个建议：在设置里把留底目录指到 vault 之外（例如 `D:\projects\obsidian-safety`）；定期手动删除旧 zip。
+3. **留底 zip 默认放在 vault 根目录**（`<vault>/.obsidian-safety-snapshots/`），会出现在 Obsidian 的文件列表里，而且**不会自动清理**（每次还原新增一份，每份约 344 MB 的配置内容大小）。两个建议：在设置里把留底目录指到 vault 之外（例如 `<vault 之外>/obsidian-safety`）；定期手动删除旧 zip。
 4. **Dropbox 的版本历史也占配额**。镜像同步会不断覆盖远端文件，旧版本会被 Dropbox 当作历史保留（保留时长按你的套餐规则）。所以长期占用会**高于** 344 MB，不是刚好等于。建议偶尔看一次设置面板里的配额显示。
 5. **配额账（真机实测，不是估算）**：镜像一份 **327.1 MiB** + 一个快照 zip **114.5 MiB**；`daily` + `keep 7` 的稳态上限约 **1.1 GiB**。当前可用 11.61 GiB，够用；但别把「快照保留份数」开很大，也别用 `every-run`（每轮一个 zip，很快吃光配额）。
 6. **不做冲突合并**。镜像同步以本地为准覆盖远端；还原以远端为准覆盖本地。没有「两边都改过」的自动合并，也没有多机同时编辑的锁。多台机器同时用，请手动错开时间。
@@ -341,7 +341,7 @@ gitignore 的一个子集，**不支持 `!` 取反**（要什么就往「包含�
 ## 13. 开发：构建与测试
 
 ```bash
-cd "D:/projects/obsidian-config-sync"
+cd "/path/to/obsidian-config-sync"
 npm install
 npm run build        # tsc --noEmit && esbuild → main.js
 npm run typecheck    # 只做类型检查

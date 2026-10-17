@@ -2,7 +2,7 @@
  * Agent D 的真实测试：ConfigWatcher（fs.watch 递归 + 防抖 + 过滤）、
  * Scheduler（启动延迟 + 定时间隔 + update/stop）、以及 src/ui/format.ts 的全部纯函数。
  *
- * 运行：cd "D:/projects/obsidian-config-sync" && node --test --test-reporter=spec test/watch.test.mjs
+ * 运行：cd "/path/to/obsidian-config-sync" && node --test --test-reporter=spec test/watch.test.mjs
  *
  * 临时目录写在 test/.tmp/ 下，每个用例自己的子目录，afterEach 清理。
  */

@@ -256,7 +256,7 @@ class MockDropbox {
 				this.lastAccountBody = body.toString("utf8");
 				return this.sendJson(res, 200, {
 					account_id: "dbid:AAA_mock",
-					name: { display_name: "Test User", given_name: "Test", surname: "User" },
+					name: { display_name: "Test User" },
 					email: "test@example.com",
 					email_verified: true,
 				});
@@ -938,7 +938,7 @@ test("getCurrentAccount / getSpaceUsage：解析正确，且无参端点发送�
 	const acct = await c.getCurrentAccount();
 	assert.deepEqual(acct, {
 		accountId: "dbid:AAA_mock",
-		name: "Test User",
+		name: "your-account",
 		email: "test@example.com",
 	});
 	assert.equal(mock.lastAccountBody, "null", "Dropbox 无参端点要求 body 为 JSON null");

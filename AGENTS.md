@@ -1,6 +1,6 @@
 # 并行开发须知（所有子 agent 必须先读这个）
 
-项目：`D:\projects\obsidian-config-sync` —— Obsidian 桌面端插件，把 vault 的 `.obsidian` 配置文件夹镜像同步 + 快照到 Dropbox。
+项目：`/path/to/obsidian-config-sync` —— Obsidian 桌面端插件，把 vault 的 `.obsidian` 配置文件夹镜像同步 + 快照到 Dropbox。
 
 **动手前请先读**：本文件 → `docs/plans/2026-10-16-obsidian-config-sync.md` → `src/types.ts` → `src/config/defaults.ts` → 你自己负责的桩文件。
 
@@ -32,7 +32,7 @@
 对每个你实现的功能：
 
 ```bash
-cd "D:/projects/obsidian-config-sync"
+cd "/path/to/obsidian-config-sync"
 node --test --test-reporter=spec test/<你的测试文件>.mjs   # 只跑你自己的，别跑 npm test
 npx tsc --noEmit 2>&1 | grep -E "^(src|test)/"              # 只看你自己文件的报错
 ```
