@@ -1,7 +1,7 @@
 {
   "name": "obsidian-config-sync",
   "version": "0.1.0",
-  "description": "把 .obsidian 配置文件夹镜像同步并快照到 Dropbox",
+  "description": "Obsidian plugin: mirror-sync the .obsidian config folder to Dropbox with zip snapshots and a safe restore path",
   "type": "module",
   "main": "main.js",
   "scripts": {
