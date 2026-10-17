@@ -385,8 +385,12 @@ DROPBOX_APP_KEY=xxx DROPBOX_REFRESH_TOKEN=yyy NODE_USE_ENV_PROXY=1 \
 | 还原（镜像还原 + 快照还原，含确认、留底、路径防穿越） | 已完成 | `test/restore.test.mjs` 23 个用例；默认注入实现由端到端测试真实执行 |
 | 插件装配（命令、ribbon、状态栏、设置面板、还原入口） | 已完成 | `test/plugin-load.test.mjs` 真加载 `main.js` 跑 onload / display / 点击 / onunload |
 | 真 Dropbox 端到端冒烟（沙盒目录上传/下载/删除/轮转） | **已通过** | `scripts/smoke-dropbox.mjs` 12 项检查，沙盒跑完删净 |
-| 部署到 vault 并在 Obsidian 里跑通 | **已通过** | 首轮 1584 个文件上传、0 错误 |
+| 部署到 vault 并在 Obsidian 里跑通 | **已通过** | 首轮 **1584 个文件 / 327.1 MiB** 上传、0 错误；另有 1 个快照 zip 114.5 MiB，远端合计 441.6 MiB |
 | 从快照 zip 还原的**界面入口** | **还没接** | 核心逻辑已实现且有测试，但界面目前只提供「镜像还原」；快照还原目前只能通过代码调用 |
+
+> **配额账**（真机实测）：配置本体 **327.1 MiB**（plugins 228.7 + snippets 89.1 + themes 9.2 + 配置 json 0.2），一个快照 zip 约 **114.5 MiB**。
+> 默认 `snapshotMode: daily` + `snapshotKeep: 7` 的稳态上限约 `327 MiB + 7 × 115 MiB ≈ 1.1 GiB`。
+> 配额紧张就把「快照保留份数」调到 2~3，或把快照模式关掉 —— 镜像同步本身只占那 327 MiB。
 
 测试总量：**154 个**（`npm test`）。其中：
 
