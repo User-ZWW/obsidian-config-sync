@@ -38,7 +38,7 @@
 |---|---|
 | 云盘 | **只有 Dropbox**。插件通过 Dropbox HTTP API v2 写入，**不需要 Dropbox 桌面客户端**（这台机器本来也没装）。 |
 | 授权方式 | **OAuth 2.0 + PKCE（公开客户端）**。**必须你自己去 Dropbox 后台建一个 App**，把它的 **App key** 填进插件设置；插件不需要 App secret。 |
-| 账号配额 | Dropbox 账号 `your-account`：总额 **18 GiB**、已用 **6.39 GiB**、可用 **11.61 GiB**（2026-10-16 实测）。 |
+| 账号配额 | 参考账号（Basic）：总额 **18 GiB**、已用 **6.39 GiB**、可用 **11.61 GiB**（2026-10-16 实测）。 |
 | 单次载荷 | 目标配置载荷实测约 **344 MB**（plugins 234M + snippets 90M + themes 9M + 配置 json 0.2M）。 |
 | 与 git 备份的关系 | **与已有的 obsidian-git 共存，互不干涉**：插件不读也不改 obsidian-git 的设置或仓库；反过来 obsidian-git 也不知道这个插件的存在。`.git/` 被排除在同步范围外。 |
 | 还原功能 | **只提供防呆版**：先预览差异 → 确认弹窗 → 还原前自动留底 zip → 才开始写。默认**只写不删**。 |
@@ -178,7 +178,7 @@ VAULT_ROOT="D:/path/to/YourVault" npm run deploy
 3. 插件拿 `code + code_verifier` 去 `https://api.dropboxapi.com/oauth2/token` 换 token（授权 URL 带 `token_access_type=offline`），拿到：
    - `access_token`（约 4 小时过期，插件会自动刷新）
    - `refresh_token`（长期有效，后台定时同步靠它）
-4. 点「测试连接」应显示账号名与邮箱，例如 `已连接 Dropbox：your-account <…>`；设置面板同时会显示配额占用。
+4. 点「测试连接」应显示你的账号名与邮箱，例如 `已连接 Dropbox：<账号名> <邮箱>`；设置面板同时会显示配额占用。
 
 凭据存在插件自己的 `data.json` 里（路径见第 10 节）。**注意第 12 节第 4 条**：该文件默认在同步范围内。
 

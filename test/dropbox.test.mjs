@@ -938,7 +938,7 @@ test("getCurrentAccount / getSpaceUsage：解析正确，且无参端点发送�
 	const acct = await c.getCurrentAccount();
 	assert.deepEqual(acct, {
 		accountId: "dbid:AAA_mock",
-		name: "your-account",
+		name: "Test User",
 		email: "test@example.com",
 	});
 	assert.equal(mock.lastAccountBody, "null", "Dropbox 无参端点要求 body 为 JSON null");
