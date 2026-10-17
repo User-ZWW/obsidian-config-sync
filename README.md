@@ -6,6 +6,8 @@
 
 > **只支持桌面端**（`isDesktopOnly: true`）。它需要读写磁盘上的 `.obsidian` 目录，移动端做不到。
 
+> **实测状态**（2026-10-17，真机 + 真 Dropbox）：一个 750 MiB 的 `.obsidian` 首轮上传 **1584 个文件、0 错误**；`npm test` **154 个测试全绿**；真 Dropbox 冒烟测试 **12 项全过**（中文名上传、9MB 分块上传会话、递归翻页、下载逐字节比对、幂等删除）。详见 [14. 当前实现状态](#14-当前实现状态)。
+
 ---
 
 ## 目录
@@ -79,19 +81,21 @@
 ### 2.1 从源码构建（当前唯一方式，插件还没上架社区市场）
 
 ```bash
-cd "D:/projects/obsidian-config-sync"
+cd /path/to/obsidian-config-sync
 npm install          # 只装 devDependencies（typescript / esbuild / obsidian 类型）
 npm run build        # tsc --noEmit + esbuild 打包成 main.js
 npm run deploy       # 把 main.js / manifest.json / styles.css 拷进插件目录
 ```
 
-`npm run deploy` 的目标目录（Windows 本机）：
+`npm run deploy` 默认写到 `scripts/deploy.mjs` 里的 `DEFAULT_VAULT`；换成其它 vault 时用参数或环境变量覆盖：
 
-```
-C:\Users\User-ZWW\Downloads\MyVault\.obsidian\plugins\obsidian-config-sync\
+```bash
+node scripts/deploy.mjs "D:/path/to/YourVault"
+# 或
+VAULT_ROOT="D:/path/to/YourVault" npm run deploy
 ```
 
-部署目录里只放 `main.js` / `manifest.json` / `styles.css` 三个文件（`npm run deploy` 会替你放好）。
+它只往 `<vault>/.obsidian/plugins/obsidian-config-sync/` 里放 `main.js` / `manifest.json` / `styles.css` 三个文件，不碰源码和 `node_modules`。
 
 ### 2.2 在 Obsidian 里启用
 
@@ -140,6 +144,16 @@ C:\Users\User-ZWW\Downloads\MyVault\.obsidian\plugins\obsidian-config-sync\
       - 必须和插件设置里的「回调端口」一致（默认 53682）；换端口就要在这里一起改。
       - Dropbox 要求：除 `localhost` 之外必须 HTTPS；端口要和请求一致；这里填的字符串必须与插件发出的 `redirect_uri` **完全一致**（结尾的 `/` 也算）。
     - **手动粘贴授权码模式**：**什么都不用填**。Dropbox 在 code flow 下允许省略 `redirect_uri`，此时它会把授权码**直接显示在页面上给你复制**（零配置兜底，适合不想开本地端口的情况）。
+
+11. **确认 `Allow public clients (Implicit Grant & PKCE)` 是 `Allow`** —— 同一页 Settings 的 OAuth 2 区块里，`Redirect URIs` 下面那一行。
+
+    - 插件走的是 **PKCE 公开客户端**流程（不带 App secret）。这一项是 `Disallow` 时授权会直接失败。
+    - 失败表现比较隐蔽：授权页可能打不开，或者 token 换取报 `missing client_secret` / `invalid_client`，而不会明确告诉你是这个开关没开。
+    - 新版控制台创建 App 时默认就是 `Allow`；如果是旧 App 或手工改过，务必确认一下。
+
+> **访问类型在控制台界面上看不到**（这是 Dropbox 的控制台缺陷）。判断方法有两条：
+> 1. 创建时选的是什么就是什么 —— 选 **Full Dropbox** 才能写账号根目录；
+> 2. 实测：如果插件往 `/Obsidian-Config-Backup/` 上传一律 `409 not_found`，而 `users/get_space_usage` 正常，那就是 **App folder** 类型，把远端根目录改成 `/Apps/<你的App名称>`。
 
 > 事后又加了权限怎么办？**必须重新授权一次**：Dropbox 不会把新作用域追溯给已有的 access_token / refresh_token。做法：插件里「断开 Dropbox」→ 再「连接 Dropbox（授权）」。
 
@@ -361,20 +375,26 @@ DROPBOX_APP_KEY=xxx DROPBOX_REFRESH_TOKEN=yyy NODE_USE_ENV_PROXY=1 \
 
 ## 14. 当前实现状态
 
-写这份 README 时（2026-10-16，Phase 2 并行开发阶段）的实际情况，避免你按文档去找不存在的按钮：
+2026-10-17 的实际情况：**全流程已在真机 + 真 Dropbox 上跑通**。
 
-| 能力 | 状态 |
-|---|---|
-| 同步核心（扫描 / 排除规则 / 差异计划 / 分块上传 / 镜像删除 / 索引） | 已实现 |
-| 快照（打 zip、上传、保留 N 份轮转） | 已实现 |
-| Dropbox 客户端与 OAuth PKCE（callback / manual 两种模式） | 已实现 |
-| 还原（镜像还原 + 快照还原，含确认、留底、路径防穿越） | 核心层已实现，`test/restore.test.mjs` 23 个用例全绿 |
-| 插件装配（命令、ribbon、状态栏、设置面板、还原入口） | 已装配（Phase 3 收尾中：命令面板与设置面板都能触发同步与还原） |
-| 真 Dropbox 端到端冒烟（沙盒目录跑一遍上传/下载/删除/轮转） | **还没做**（Phase 4，以主流程的最终报告为准） |
-| 部署到 vault 并在 Obsidian 里跑通 | **还没做**（Phase 5） |
-| 从快照 zip 还原的**界面入口** | **还没接**（Phase 6 联调）：界面目前只提供「镜像还原」；快照还原的核心逻辑已实现并有测试，但没有按钮调用它 |
+| 能力 | 状态 | 证据 |
+|---|---|---|
+| 同步核心（扫描 / 排除规则 / 差异计划 / 分块上传 / 镜像删除 / 索引判重） | 已完成 | 单元测试 + `test/e2e.integration.test.mjs` |
+| 快照（打 zip、上传、保留 N 份轮转） | 已完成 | 端到端测试断言远端只剩 N 份、条目与未压缩大小一致 |
+| Dropbox 客户端与 OAuth PKCE（callback / manual 两种模式） | 已完成 | 真机授权成功（本机用 callback 模式，`127.0.0.1:53682`） |
+| 还原（镜像还原 + 快照还原，含确认、留底、路径防穿越） | 已完成 | `test/restore.test.mjs` 23 个用例；默认注入实现由端到端测试真实执行 |
+| 插件装配（命令、ribbon、状态栏、设置面板、还原入口） | 已完成 | `test/plugin-load.test.mjs` 真加载 `main.js` 跑 onload / display / 点击 / onunload |
+| 真 Dropbox 端到端冒烟（沙盒目录上传/下载/删除/轮转） | **已通过** | `scripts/smoke-dropbox.mjs` 12 项检查，沙盒跑完删净 |
+| 部署到 vault 并在 Obsidian 里跑通 | **已通过** | 首轮 1584 个文件上传、0 错误 |
+| 从快照 zip 还原的**界面入口** | **还没接** | 核心逻辑已实现且有测试，但界面目前只提供「镜像还原」；快照还原目前只能通过代码调用 |
 
-因此：**第一次真正使用前，请先跑一遍「预览差异」和一次小范围手动备份**，确认远端目录结构符合预期，再打开自动同步与镜像删除。这份文档里凡是标「已实现」的能力都有对应测试；标「进行中 / 还没做」的，请以实际界面为准，并在跑完 Phase 4/5 后回来更新本节。
+测试总量：**154 个**（`npm test`）。其中：
+
+- 单模块测试：Dropbox 客户端 29、扫描 13、同步核心 36、触发与 UI 格式化 24、还原 23
+- `test/e2e.integration.test.mjs` 13 项：真实 `DropboxClient` + 真实扫描器 + 真实 `yazl`/`yauzl`，只把 Dropbox 服务端换成保真 mock
+- `test/plugin-load.test.mjs` 12 项：按 CJS 真编译打包产物，用 `obsidian` 替身跑加载、设置面板、状态栏点击、文件监听触发
+
+> 这份文档里凡是标「已完成 / 已通过」的都有对应测试或实测记录；标「还没接」的请以实际界面为准。已知的两个粗糙处：快照还原没有界面入口；快照文件名是秒级时间戳，同一秒内连点两次「生成快照」会互相覆盖（内容相同，不会丢数据）。
 
 ---
 
