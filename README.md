@@ -81,7 +81,15 @@ The whole `.obsidian` directory, minus the exclusion rules. The defaults were de
 
 ## 2. Installation
 
-### 2.1 Build from source (the only way for now — not in the community store)
+### 2.1 Install via BRAT (easiest)
+
+1. Install [BRAT](https://github.com/TfTHacker/obsidian42-brat)
+2. In BRAT: **Add beta plugin** → `User-ZWW/obsidian-config-sync`
+3. Enable **Config Folder Sync** in Settings → Community plugins
+
+BRAT pulls `manifest.json` / `main.js` / `styles.css` from the release assets, so future updates arrive via its "check for updates" action.
+
+### 2.2 Build from source (for development, or to pin your own build)
 
 ```bash
 cd /path/to/obsidian-config-sync
@@ -100,7 +108,7 @@ VAULT_ROOT="D:/path/to/YourVault" npm run deploy
 
 It only copies `main.js` / `manifest.json` / `styles.css` into `<vault>/.obsidian/plugins/obsidian-config-sync/` — never sources or `node_modules`.
 
-### 2.2 Enable it in Obsidian
+### 2.3 Enable it in Obsidian
 
 1. Settings → Community plugins → turn off **Restricted mode** if it is on
 2. Find **Config Folder Sync** under Installed plugins → toggle it on

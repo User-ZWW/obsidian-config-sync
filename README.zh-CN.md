@@ -80,7 +80,15 @@
 
 ## 2. 安装
 
-### 2.1 从源码构建（当前唯一方式，插件还没上架社区市场）
+### 2.1 用 BRAT 安装（最省事）
+
+1. 装 [BRAT](https://github.com/TfTHacker/obsidian42-brat)
+2. BRAT 里点 **Add beta plugin** → 填 `User-ZWW/obsidian-config-sync`
+3. 设置 → 第三方插件 → 启用 **Config Folder Sync**
+
+BRAT 会从 Release 资产里取 `manifest.json` / `main.js` / `styles.css`，以后点它的「check for updates」就能升级。
+
+### 2.2 从源码构建（开发用，或想固定自己的构建）
 
 ```bash
 cd /path/to/obsidian-config-sync
@@ -99,7 +107,7 @@ VAULT_ROOT="D:/path/to/YourVault" npm run deploy
 
 它只往 `<vault>/.obsidian/plugins/obsidian-config-sync/` 里放 `main.js` / `manifest.json` / `styles.css` 三个文件，不碰源码和 `node_modules`。
 
-### 2.2 在 Obsidian 里启用
+### 2.3 在 Obsidian 里启用
 
 1. Obsidian → 设置 → 第三方插件 → **关闭「受限模式」**（如果还没关）
 2. 在「已安装插件」里找到 **Config Folder Sync**（中文名：配置文件夹云备份）→ 打开开关
